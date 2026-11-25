@@ -1,0 +1,330 @@
+/**
+ * Prints do sistema rodando de verdade, para o README. Monta um mundo de
+ * demonstração (pré-gerados do Ato I, um POI, um desafio) e fotografa cada tela.
+ *
+ *   node scripts/e2e/capturar.mjs
+ */
+import { chromium } from "playwright";
+import { mkdir } from "node:fs/promises";
+
+// `OP2_SAIDA` para fotografar em outro lugar (revisão), `OP2_TEMA=light|dark` para
+// fixar o tema do Foundry antes — os prints do README são no escuro.
+const SAIDA = process.env.OP2_SAIDA ?? "docs/img";
+const PORTA = process.env.PORTA_FVTT ?? 30099;
+const TEMA = process.env.OP2_TEMA ?? "dark";
+await mkdir(SAIDA, { recursive: true });
+
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 2 });
+page.on("pageerror", (e) => console.log("[erro]", String(e).slice(0, 200)));
+
+await page.goto(`http://localhost:${PORTA}/join`, { waitUntil: "networkidle" });
+await page.selectOption("select[name='userid']", { label: "Gamemaster" });
+await page.click("button[name='join'], button[type='submit']");
+await page.waitForURL("**/game");
+await page.waitForFunction(() => globalThis.game?.ready === true, null, { timeout: 60000 });
+await page.waitForTimeout(2000);
+// O tema é setting do cliente (uiConfig.colorScheme, v13 e v14): fixa e recarrega.
+const temaAtual = await page.evaluate(() => game.settings.get("core", "uiConfig")?.colorScheme?.applications ?? "");
+if (temaAtual !== TEMA) {
+  await page.evaluate(async (tema) => {
+    const cfg = foundry.utils.deepClone(game.settings.get("core", "uiConfig"));
+    cfg.colorScheme = { applications: tema, interface: tema };
+    await game.settings.set("core", "uiConfig", cfg);
+  }, TEMA);
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForFunction(() => globalThis.game?.ready === true, null, { timeout: 60000 });
+  await page.waitForTimeout(2000);
+}
+
+// Fecha avisos do navegador que sujam o print.
+await page.evaluate(() => {
+  for (const n of document.querySelectorAll("#notifications .notification")) n.remove();
+});
+
+const dados = await page.evaluate(async () => {
+  // Apagar em lote: o mundo de teste acumula centenas de documentos das rodadas
+  // anteriores do e2e, e um `delete()` por vez leva minutos.
+  await Actor.deleteDocuments(game.actors
+    .filter((a) => ["personagem", "npc", "investigacao"].includes(a.type)).map((a) => a.id));
+  await Item.deleteDocuments(game.items
+    .filter((i) => ["ponto-interesse", "desafio-acesso"].includes(i.type)).map((i) => i.id));
+  await ChatMessage.deleteDocuments(game.messages.map((m) => m.id));
+
+  // Os pré-gerados vêm do bundle da janela de aventuras, SEM as artes da editora: os
+  // prints vão para o README e para a listagem do Foundry, e a Licença da Comunidade
+  // não deixa reproduzir imagem do livro — retrato e token ficam no ícone do sistema.
+  const fontes = await (await fetch("systems/op2-comunidade-fork/assets/aventura/fontes-ato-i.json")).json();
+  const ICONE = "icons/svg/mystery-man.svg"; // do próprio Foundry, não redistribuído
+  const importar = async (nome) => {
+    const doc = foundry.utils.deepClone(fontes.pregerados.find((a) => a.name === nome));
+    doc.img = ICONE;
+    foundry.utils.setProperty(doc, "prototypeToken.texture.src", ICONE);
+    foundry.utils.setProperty(doc, "system.biografia", "");
+    return Actor.create(doc);
+  };
+  const alan = await importar("Alan");
+  const edgar = await importar("Edgar");
+  await alan.update({ "system.recursos.pd.value": 12 });
+  // A barra de Ímpeto é a habilidade: o estado mora nela.
+  await alan.items.getName("Ímpeto")?.update({ "system.impeto.preenchidos": 1 });
+
+  const npc = await Actor.create({ name: "Zelador", type: "npc" });
+
+  const poi = await Item.create({
+    name: "Estante de Livros", type: "ponto-interesse",
+    system: {
+      descricaoBasica: "<p>Uma estante alta, de madeira escura, com livros fora de ordem.</p>",
+      descricaoContextual: "<p>Atrás da fileira de baixo há um cofre embutido.</p>",
+      informacoes: [
+        { id: "a", pericia: "percepcao", dt: 6, texto: "Um livro está fora de lugar.", aberta: true },
+        { id: "b", pericia: "percepcao", dt: 9, texto: "A poeira foi remexida há pouco." },
+        { id: "c", pericia: "aptidao.humanas", dt: 7, texto: "Os títulos são todos sobre arqueologia." },
+        { id: "d", pericia: "ocultismo", dt: 11, texto: "Um dos volumes não tem título.", oculta: true },
+      ],
+    },
+  });
+
+  const desafio = await Item.create({
+    name: "Cofre Embutido", type: "desafio-acesso",
+    system: {
+      abordagens: { arrombar: true, destrancar: true, hackTecnico: false, hackSocial: false, generico: false },
+      dtObjeto: 9, pontuacaoAlvo: 10, pontuacaoAtual: 4, maxTentativas: 3, tentativasUsadas: 1,
+    },
+  });
+
+  const inv = await game.op2.criarInvestigacao("O Porão");
+  for (const a of [alan, edgar, npc]) await game.op2.adicionarParticipante(inv, a.uuid);
+  await game.op2.vincularPoi(inv, poi.uuid, { oculto: false });
+  await game.op2.vincularDesafio(inv, desafio.uuid, { oculto: false });
+  await inv.update({ "system.rodada": 3, "system.sobrecarga.ativa": true });
+  await game.user.update({ character: alan.id });
+
+  await game.op2.examinar(alan, poi.uuid, "percepcao", { rapido: true });
+  return { alanId: alan.id, poiUuid: poi.uuid, desafioUuid: desafio.uuid };
+});
+await page.waitForTimeout(1200);
+
+async function fotografar(nome, seletor, { antes } = {}) {
+  if (antes) await page.evaluate(antes, dados);
+  // Janela que consulta o mundo antes de aparecer (a de aventuras confere as artes na
+  // pasta) leva mais de um segundo: esperar pelo elemento, não por um tempo fixo.
+  const apareceu = await page.waitForSelector(seletor, { timeout: 15000 }).catch(() => null);
+  if (!apareceu) return console.log(`(sem elemento) ${nome}`);
+  await page.waitForTimeout(1200);
+  // Print da área do elemento, não do elemento: o print de elemento do Playwright espera
+  // ele "estável" e falha se a janela se re-renderiza ou anima nesse meio tempo (o
+  // handle de cima pode nem estar mais no DOM). A caixa é lida na hora.
+  const caixa = await (await page.$(seletor))?.boundingBox();
+  if (!caixa) return console.log(`(sem elemento) ${nome}`);
+  await page.screenshot({ path: `${SAIDA}/${nome}.png`, clip: caixa });
+  console.log(`${SAIDA}/${nome}.png`);
+}
+
+await fotografar("ficha-personagem", ".op2-ficha--personagem", {
+  antes: ({ alanId }) => game.actors.get(alanId).sheet.render(true),
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+
+// A tela de boas-vindas e a janela de aventuras: o que o mestre vê ao entrar, e de onde
+// as aventuras vêm. A janela mostra "guardada no mundo" quando o e2e já montou os atos.
+await fotografar("boas-vindas", "#op2-boas-vindas", { antes: () => game.op2.boasVindas() });
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+await fotografar("aventuras-do-playtest", "#op2-aventuras", { antes: () => game.op2.aventuras() });
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+
+await page.evaluate(() => localStorage.setItem("op2.painel.aba", "pontos"));
+await fotografar("painel-investigacao", "#op2-painel-investigacao", {
+  antes: () => game.op2.painelInvestigacao(),
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+
+await fotografar("acoes-investigacao", "[id^=op2-acoes]", {
+  antes: ({ alanId }) => game.op2.acoesInvestigacao(game.actors.get(alanId)),
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+
+await fotografar("ficha-poi", ".op2-ficha--poi", {
+  antes: async ({ poiUuid }) => (await fromUuid(poiUuid)).sheet.render(true),
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+
+await fotografar("ficha-desafio", ".op2-ficha--desafio", {
+  antes: async ({ desafioUuid }) => (await fromUuid(desafioUuid)).sheet.render(true),
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+
+await fotografar("dialogo-teste", "#op2-pericia-dialog", {
+  antes: async ({ alanId }) => {
+    const { escolherPericia } = await import("/systems/op2-comunidade-fork/module/dice/pericia-dialog.mjs");
+    escolherPericia(game.actors.get(alanId), { titulo: "Examinar — Estante de Livros", mostrarAtributo: true });
+  },
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+
+// A sidebar do headless nasce recolhida (log com altura 0) e o popout do chat não
+// abre sem canvas. Os cards são HTML puro: renderizar o conteúdo da mensagem numa
+// página em branco com o CSS do sistema dá o mesmo pixel, sem depender da sidebar.
+const cardsHtml = await page.evaluate(async ({ alanId }) => {
+  const alan = game.actors.get(alanId);
+  const alvo = game.actors.find((a) => a.type === "npc");
+  await game.op2.atacar(alan, { alvoUuid: alvo.uuid, armado: false, rapido: true });
+  await new Promise((r) => setTimeout(r, 800));
+
+  const doTipo = (tipo) => game.messages.contents
+    .filter((m) => m.getFlag("op2-comunidade-fork", "tipo") === tipo).at(-1)?.content ?? null;
+  return { examinar: doTipo("investigacao"), ataque: doTipo("ataque") };
+}, dados);
+
+const css = await page.evaluate(async () => {
+  const resposta = await fetch("/systems/op2-comunidade-fork/styles/op2.css");
+  return resposta.text();
+});
+
+const folha = await browser.newPage({ viewport: { width: 460, height: 700 }, deviceScaleFactor: 2 });
+for (const [nome, html] of Object.entries(cardsHtml)) {
+  if (!html) { console.log(`(sem card) ${nome}`); continue; }
+  await folha.setContent(`
+    <style>${css}</style>
+    <body class="op2 theme-dark" style="margin:0;padding:16px;background:#0d0908">
+      <div style="max-width:400px">${html}</div>
+    </body>`);
+  await folha.waitForTimeout(400);
+  const el = await folha.$(".op2-card");
+  if (!el) { console.log(`(sem .op2-card) ${nome}`); continue; }
+  await el.screenshot({ path: `${SAIDA}/card-${nome}.png` });
+  console.log(`${SAIDA}/card-${nome}.png`);
+}
+
+// O modo Vigília veste o tema do beta (styles/parciais/_vigilia.scss): a ficha e o
+// painel de ação, que o README mostra na seção do modo, saem nele. Troca, fotografa e
+// volta ao moderno, que é o padrão do mundo de teste.
+const trocarModo = async (modo) => {
+  await Promise.all([
+    page.waitForEvent("load", { timeout: 60000 }),
+    page.evaluate((m) => game.op2.trocarModo(m), modo),
+  ]);
+  await page.waitForFunction((m) => globalThis.game?.ready === true
+    && game.settings.get("op2-comunidade-fork", "modo") === m, modo, { timeout: 60000 });
+  await page.waitForTimeout(2000);
+  await page.evaluate(() => { for (const n of document.querySelectorAll("#notifications .notification")) n.remove(); });
+};
+await trocarModo("vigilia");
+const vigilia = await page.evaluate(async () => {
+  for (const a of foundry.applications.instances.values()) await a.close?.();
+  // Mesma regra dos pré-gerados do Ato I: sem a arte da editora no print.
+  const fontes = await (await fetch("systems/op2-comunidade-fork/assets/aventura/fontes-vigilia.json")).json();
+  const ICONE = "icons/svg/mystery-man.svg";
+  const importar = (inicio) => {
+    const doc = foundry.utils.deepClone(fontes.pregerados.find((a) => a.name.startsWith(inicio)));
+    delete doc._id;
+    doc.img = ICONE;
+    foundry.utils.setProperty(doc, "prototypeToken.texture.src", ICONE);
+    foundry.utils.setProperty(doc, "system.biografia", "");
+    return Actor.create(doc);
+  };
+  const rhiona = await importar("Rhiona");
+  const rowan = await importar("Rowan");
+  const npc = await Actor.create({ name: "Afogado", type: "npc", system: {
+    recursos: { pv: { value: 10, max: 10 }, pd: { value: 0, max: 0 } }, ataques: [{ nome: "Garras", tipo: "corpo", dados: "d8+d6", bonusDano: 1 }],
+  } });
+  const cena = await Actor.create({ name: "Os Afogados", type: "cena-acao", system: { tipo: "combate", participantes: [rhiona.uuid, rowan.uuid, npc.uuid] } });
+  return { rhionaId: rhiona.id, rowanId: rowan.id, cenaId: cena.id };
+});
+
+Object.assign(dados, vigilia);
+await fotografar("ficha-vigilia", ".op2-ficha--personagem", {
+  antes: ({ rhionaId }) => game.actors.get(rhionaId).sheet.render(true),
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+await fotografar("painel-acao", "#op2-painel-acao", {
+  antes: async ({ cenaId }) => {
+    const cena = game.actors.get(cenaId);
+    await game.op2.iniciarCena(cena);
+    game.op2.painelAcao(cena);
+  },
+});
+await page.evaluate(() => [...foundry.applications.instances.values()].forEach((a) => a.close?.()));
+// O palco: alguém age e dá um passo à frente com a legenda. Print com folga em cima, onde a legenda sobe.
+await page.evaluate(async ({ rhionaId, cenaId }) => {
+  const rhiona = game.actors.get(rhionaId);
+  const cena = game.actors.get(cenaId);
+  const alvo = cena.system.participantes.map((u) => fromUuidSync(u)).find((a) => a?.type === "npc");
+  await game.op2.vigilia.atacar(rhiona, game.op2.vigilia.ataquesDe(rhiona)[0], { cena, rapido: true, escolha: { alvo: alvo.uuid } });
+}, dados);
+await page.waitForTimeout(1500);
+// O card de confronto do ataque de cima, na mesma folha em branco dos cards do modo moderno,
+// com o tema do beta. `<base>` para os retratos dos atores carregarem do servidor.
+const confronto = await page.evaluate(() => game.messages.contents
+  .filter((m) => m.content.includes("op2-confronto")).at(-1)?.content ?? null);
+if (confronto) {
+  await folha.setContent(`
+    <base href="http://localhost:${PORTA}/">
+    <style>${css}</style>
+    <body class="op2 op2-vigilia theme-dark" style="margin:0;padding:16px;background:#0d0908">
+      <div style="max-width:400px">${confronto}</div>
+    </body>`);
+  await folha.waitForTimeout(600);
+  const el = await folha.$(".op2-card");
+  if (el) {
+    await el.screenshot({ path: `${SAIDA}/card-confronto.png` });
+    console.log(`${SAIDA}/card-confronto.png`);
+  } else console.log("(sem .op2-card) confronto");
+} else console.log("(sem card) confronto");
+// O palco conduz o combate: a criatura na mira e o menu da figura aberto (ficha, alvo, PV, ações).
+await page.evaluate(async ({ cenaId }) => {
+  const cena = game.actors.get(cenaId);
+  const alvo = cena.system.participantes.map((u) => fromUuidSync(u)).find((a) => a?.type === "npc");
+  const { alternarAlvo } = await import("/systems/op2-comunidade-fork/module/vigilia/alvos.mjs");
+  alternarAlvo(alvo);
+}, dados);
+await page.waitForTimeout(600);
+await page.click(`#op2-palco .op2-palco__figura:not(.op2-palco__figura--criatura) [data-palco="figura"]`).catch(() => null);
+// Mouse fora do palco: a dica do retrato cobriria a barra de fases no print.
+await page.mouse.move(5, 5);
+await page.waitForTimeout(1200);
+const palco = await (await page.$("#op2-palco"))?.boundingBox();
+if (palco) {
+  const menu = await (await page.$("#op2-palco .op2-palco__figura--menu .op2-palco__menu"))?.boundingBox();
+  const topo = Math.max(0, Math.min(palco.y - 90, menu ? menu.y - 16 : Infinity));
+  const clip = { x: palco.x - 16, y: topo, width: palco.width + 32, height: palco.y + palco.height + 10 - topo };
+  await page.screenshot({ path: `${SAIDA}/palco.png`, clip });
+  console.log(`${SAIDA}/palco.png${menu ? "" : " (sem menu)"}`);
+} else console.log("(sem elemento) palco");
+await page.keyboard.press("Escape");
+// A transmissão (OBS): outra sessão com ?op2-transmissao, só os cards, fundo transparente.
+// Pelo usuário "Transmissão", como o README manda: o Foundry não deixa o mesmo usuário entrar
+// duas vezes (a opção dele fica desabilitada no /join enquanto a outra sessão está aberta).
+const camera = await page.evaluate(async ({ rhionaId, rowanId }) => {
+  const usuario = game.users.getName("Transmissão")
+    ?? await User.create({ name: "Transmissão", role: CONST.USER_ROLES.PLAYER });
+  for (const id of [rhionaId, rowanId]) {
+    await game.actors.get(id).update({ [`ownership.${usuario.id}`]: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER });
+  }
+  await game.settings.set("op2-comunidade-fork", "transmissao",
+    { posicao: "top-left", direcao: "coluna", escala: 1, condicoes: true, usuario: usuario.id, atores: [rhionaId, rowanId] });
+  return usuario.id;
+}, dados);
+const tx = await browser.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 2 });
+await tx.goto(`http://localhost:${PORTA}/join`, { waitUntil: "networkidle" });
+await tx.selectOption("select[name='userid']", { label: "Transmissão" });
+await tx.click("button[name='join'], button[type='submit']");
+await tx.waitForURL("**/game");
+await tx.goto(`http://localhost:${PORTA}/game?op2-transmissao`, { waitUntil: "networkidle" });
+await tx.waitForFunction(() => globalThis.game?.ready === true && document.querySelector("#op2-transmissao .op2-transmissao__card"), null, { timeout: 60000 });
+await page.evaluate(({ rhionaId }) => game.op2.rolarTeste(game.actors.get(rhionaId), { chavePericia: "percepcao", rapido: true, dt: 7 }), dados);
+await tx.waitForTimeout(1500);
+const caixaTx = await (await tx.$("#op2-transmissao"))?.boundingBox();
+if (caixaTx) {
+  await tx.screenshot({ path: `${SAIDA}/transmissao.png`, omitBackground: true,
+    clip: { x: Math.max(0, caixaTx.x - 12), y: Math.max(0, caixaTx.y - 12), width: caixaTx.width + 24, height: caixaTx.height + 24 } });
+  console.log(`${SAIDA}/transmissao.png`);
+} else console.log("(sem elemento) transmissao");
+await tx.close();
+await page.evaluate(async (id) => {
+  await game.settings.set("op2-comunidade-fork", "transmissao", {});
+  await game.users.get(id)?.delete();
+}, camera);
+await trocarModo("moderno");
+
+await browser.close();

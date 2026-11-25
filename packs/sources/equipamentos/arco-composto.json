@@ -1,0 +1,36 @@
+{
+  "_id": "21b9b78bfb3f7c9e",
+  "name": "Arco composto",
+  "type": "equipamento",
+  "img": "systems/op2-comunidade-fork/assets/icons/tipos/equipamento.svg",
+  "system": {
+    "quantidade": 1,
+    "equipado": true,
+    "arma": true,
+    "descricao": "",
+    "ataque": {
+      "tipo": "distancia",
+      "bonusDano": 1,
+      "bonusTeste": 0,
+      "minimoCritico": 0,
+      "ignoraRd": 0,
+      "pequena": false
+    },
+    "marcial": false,
+    "armadura": 0,
+    "passos": "",
+    "cargas": {
+      "usa": false,
+      "value": 0,
+      "max": 0
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!21b9b78bfb3f7c9e"
+}

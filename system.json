@@ -1,0 +1,201 @@
+{
+  "id": "op2-comunidade-fork",
+  "title": "Ordem Paranormal 2 Edição",
+  "description": "Sistema comunitário independente para Ordem Paranormal 2ª Edição no FoundryVTT, com o objetivo de facilitar a vida de todos os mestres de Ordem 2E.",
+  "version": "0.1.0",
+  "socket": true,
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "esmodules": [
+    "module/op2.mjs"
+  ],
+  "styles": [
+    "styles/op2.css"
+  ],
+  "languages": [
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
+    },
+    {
+      "lang": "pt",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
+    },
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "personagem": {},
+      "npc": {},
+      "investigacao": {},
+      "cena-acao": {}
+    },
+    "Item": {
+      "habilidade": {},
+      "equipamento": {},
+      "ferramenta": {},
+      "ponto-interesse": {},
+      "desafio-acesso": {},
+      "ocupacao": {},
+      "evento": {}
+    }
+  },
+  "relationships": {
+    "recommends": [
+      {
+        "id": "pt-BR",
+        "type": "module",
+        "reason": "Traduz a interface do próprio Foundry para português. O sistema já vem em pt-BR; o core, não."
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Sérgio Sousa",
+      "url": "https://meioorc.com"
+    },
+    {
+      "name": "Mineiro",
+      "url": "https://github.com/Mineiroo3121"
+    }
+  ],
+  "url": "https://github.com/Mineiroo3121/op2-comunidade-fork",
+  "readme": "https://github.com/Mineiroo3121/op2-comunidade-fork#readme",
+  "bugs": "https://github.com/Mineiroo3121/op2-comunidade-fork/issues",
+  "changelog": "https://github.com/Mineiroo3121/op2-comunidade-fork/blob/main/CHANGELOG.md",
+  "media": [
+    {
+      "type": "setup",
+      "url": "systems/op2-comunidade-fork/assets/marca/setup.png",
+      "caption": "Card do sistema na tela de setup"
+    },
+    {
+      "type": "cover",
+      "url": "https://raw.githubusercontent.com/Mineiroo3121/op2-comunidade-fork/main/assets/marca/setup.png",
+      "caption": "Ordem Paranormal 2 — Playtest (Não-Oficial)"
+    },
+    {
+      "type": "icon",
+      "url": "https://raw.githubusercontent.com/Mineiroo3121/op2-comunidade-fork/main/assets/licenca/selo-branco.png",
+      "caption": "Selo da Licença da Comunidade"
+    },
+    {
+      "type": "screenshot",
+      "url": "https://raw.githubusercontent.com/Mineiroo3121/op2-comunidade-fork/main/docs/img/ficha-personagem.png",
+      "caption": "Ficha de personagem: escada d4→d12, perícias pareadas com atributo e a cor do perfil."
+    },
+    {
+      "type": "screenshot",
+      "url": "https://raw.githubusercontent.com/Mineiroo3121/op2-comunidade-fork/main/docs/img/painel-investigacao.png",
+      "caption": "Painel do mestre: rodadas, pontos de interesse com o quadro Perícia · DT · Informação e desafios."
+    },
+    {
+      "type": "screenshot",
+      "url": "https://raw.githubusercontent.com/Mineiroo3121/op2-comunidade-fork/main/docs/img/aventuras-do-playtest.png",
+      "caption": "Aventuras do playtest: o sistema lê o seu PDF e monta os dois atos no compêndio do mundo."
+    },
+    {
+      "type": "screenshot",
+      "url": "https://raw.githubusercontent.com/Mineiroo3121/op2-comunidade-fork/main/docs/img/card-examinar.png",
+      "caption": "Examinar no chat: RA/RB, o que foi descoberto e o custo em PD."
+    },
+    {
+      "type": "screenshot",
+      "url": "https://raw.githubusercontent.com/Mineiroo3121/op2-comunidade-fork/main/docs/img/dialogo-teste.png",
+      "caption": "Diálogo de teste: dados da perícia e do atributo, DT e teste oposto."
+    }
+  ],
+  "license": "LICENSE",
+  "grid": {
+    "distance": 1.5,
+    "units": "m"
+  },
+  "primaryTokenAttribute": "recursos.pv",
+  "secondaryTokenAttribute": "recursos.pd",
+  "packs": [
+    {
+      "name": "habilidades",
+      "label": "Habilidades",
+      "path": "packs/habilidades",
+      "type": "Item",
+      "system": "op2-comunidade-fork",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    },
+    {
+      "name": "ferramentas",
+      "label": "Ferramentas da Ordo Realitas",
+      "path": "packs/ferramentas",
+      "type": "Item",
+      "system": "op2-comunidade-fork",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    },
+    {
+      "name": "ocupacoes",
+      "label": "Ocupações",
+      "path": "packs/ocupacoes",
+      "type": "Item",
+      "system": "op2-comunidade-fork",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    },
+    {
+      "name": "habilidades-vigilia",
+      "label": "Habilidades — Modo Vigília",
+      "path": "packs/habilidades-vigilia",
+      "type": "Item",
+      "system": "op2-comunidade-fork",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    }
+  ],
+  "packFolders": [
+    {
+      "name": "Ordem Paranormal 2",
+      "sorting": "m",
+      "color": "#c8321e",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Habilidades",
+          "sorting": "m",
+          "color": "#8f2315",
+          "packs": [
+            "habilidades",
+            "habilidades-vigilia"
+          ],
+          "folders": []
+        },
+        {
+          "name": "Regras",
+          "sorting": "m",
+          "color": "#8f2315",
+          "packs": [
+            "ocupacoes",
+            "ferramentas"
+          ],
+          "folders": []
+        }
+      ]
+    }
+  ],
+  "manifest": "https://github.com/Mineiroo3121/op2-comunidade-fork/releases/latest/download/system.json",
+  "download": "https://github.com/Mineiroo3121/op2-comunidade-fork/releases/download/v0.1.0/op2-comunidade-fork.zip"
+}

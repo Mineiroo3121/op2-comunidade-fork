@@ -1,0 +1,906 @@
+// Ajustes específicos do fork, extraídos do CSS distribuído para preservar o layout.
+
+/* Ajustes personalizados da ficha — distribuídos também no CSS compilado. */
+@layer system {
+  .op2-seletor-item {
+    display: grid;
+    grid-template-columns: minmax(16rem, .85fr) minmax(18rem, 1.15fr);
+    gap: 1rem;
+    min-width: 0;
+    padding: .5rem;
+  }
+  .op2-seletor-item__lista { display: flex; min-width: 0; flex-direction: column; gap: .4rem; }
+  .op2-seletor-item__lista select { width: 100%; min-height: 25rem; max-height: 32rem; }
+  .op2-seletor-item__previa {
+    min-width: 0; max-height: 34rem; overflow: auto; padding: 1rem;
+    border: 1px solid var(--op2-linha); background: var(--op2-superficie);
+    line-height: 1.5; white-space: pre-wrap;
+  }
+  .op2-seletor-item__previa h3 { margin: 0 0 .5rem; color: var(--op2-vermelho-claro); }
+  .op2-seletor-item__previa [data-op2-preview-meta] { margin-bottom: .5rem; color: var(--op2-texto-fraco); font-size: .78rem; }
+
+  .op2-ficha .op2-vinculos__lista {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    gap: .5rem; margin: .5rem 0 1rem; padding: 0; list-style: none;
+  }
+  .op2-ficha .op2-vinculo {
+    display: flex; align-items: center; gap: .5rem; min-width: 0;
+    padding: .5rem; border: 1px solid var(--op2-linha); background: var(--op2-superficie);
+  }
+  .op2-ficha .op2-vinculo__retrato {
+    display: block; width: 3rem !important; height: 3rem !important;
+    min-width: 3rem; max-width: 3rem !important; max-height: 3rem !important;
+    flex: 0 0 3rem !important; object-fit: cover; border: 1px solid var(--op2-linha-forte);
+  }
+  .op2-ficha .op2-vinculo__dados {
+    display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; gap: .25rem;
+  }
+  .op2-ficha .op2-vinculo__campo {
+    display: flex; align-items: center; gap: .35rem; min-width: 0;
+    color: var(--op2-texto-fraco); font-size: .7rem;
+  }
+  .op2-ficha .op2-vinculo__campo > span { flex: 0 0 5.4rem; }
+  .op2-ficha .op2-vinculo__campo input {
+    width: 100%; min-width: 0; height: 1.7rem; padding: .1rem .3rem; font-size: .78rem;
+  }
+  .op2-ficha .op2-vinculo__campo--grau select {
+    width: 4.5rem; min-width: 4.5rem; height: 1.7rem; padding: .1rem .25rem;
+  }
+  .op2-ficha .op2-vinculo__pontos { display: inline-flex; align-items: center; gap: 3px; }
+  .op2-ficha .op2-vinculo__pontos i { color: var(--op2-acento); font-size: .65rem; }
+
+  .op2-ficha .op2-modo-ficha {
+    display: flex; align-items: center; flex-wrap: wrap; width: auto; gap: .35rem;
+    color: var(--op2-texto-fraco); font-size: .72rem;
+  }
+  .op2-ficha .op2-modo-ficha__select {
+    width: auto; max-width: 14rem; min-height: 1.65rem; padding: .1rem .35rem; font-size: .72rem;
+  }
+  .op2-ficha .op2-modo-ficha__valor { color: var(--op2-texto); }
+
+  .op2-ficha .op2-pericia {
+    grid-template-columns: minmax(0, 1fr) 1.6rem .7rem 1.6rem 3.4rem 1.4rem 1.2rem;
+  }
+  .op2-ficha .op2-pericia__editar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.1rem; height: 1.35rem; padding: 0; border: 0;
+    background: transparent; color: var(--op2-texto-fraco); cursor: pointer; font-size: .65rem;
+  }
+  .op2-ficha .op2-pericia__editar:hover { color: var(--op2-vermelho-claro); }
+
+  /* Modo Vigília por ficha, independente da configuração global do mundo. */
+  .op2[data-modo-ficha="vigilia"] {
+    --op2-preto: #0e1315; --op2-painel: #141b1d; --op2-painel-alto: #1c2427;
+    --op2-vermelho: #a6a395; --op2-vermelho-claro: #d4d0c3; --op2-vermelho-escuro: #6c6b62;
+    --op2-tinta: #eef0ec; --op2-tinta-fraca: #8b9594;
+    --op2-linha: rgba(212, 208, 195, .14); --op2-linha-forte: rgba(212, 208, 195, .28);
+    --op2-sobre-acento: #0e1315; --op2-perfil-executor: #a6a395;
+    --op2-perfil-analista: #a6a395; --op2-perfil-vigilante: #a6a395;
+    --op2-perfil-executor-claro: #d4d0c3; --op2-perfil-analista-claro: #d4d0c3;
+    --op2-perfil-vigilante-claro: #d4d0c3; --op2-acento: #a6a395; --op2-acento-claro: #d4d0c3;
+    --op2-faixa: #5f5e57; --op2-faixa-texto: #fff;
+    --op2-fundo: #0e1315; --op2-superficie: #141b1d; --op2-superficie-alta: #1c2427;
+    --op2-texto: #eef0ec; --op2-texto-fraco: #8b9594;
+    --op2-fonte-display: "OP2 Vigilia Titulo", "IM Fell English SC", Georgia, serif;
+    --op2-fonte-rotulo: "OP2 Vigilia Corpo", "Barlow", "Arial Narrow", sans-serif;
+    --op2-fonte-mono: "OP2 Vigilia Corpo", "Barlow", "Arial Narrow", sans-serif;
+    --op2-fonte-corpo: "OP2 Vigilia Corpo", "Barlow", "Helvetica Neue", sans-serif;
+  }
+  .op2[data-modo-ficha="vigilia"] .op2-tag {
+    padding-inline: 1.5em; background: var(--op2-faixa); color: var(--op2-faixa-texto) !important;
+    font-family: var(--op2-fonte-rotulo); font-weight: 800; letter-spacing: .04em;
+    text-shadow: 0 0 2px #000, 0 0 3px #000;
+  }
+  .op2[data-modo-ficha="vigilia"] .op2-moldura {
+    border-color: rgba(212, 208, 195, .3);
+  }
+  .op2[data-modo-ficha="vigilia"] .op2-moldura::before {
+    border-color: rgba(212, 208, 195, .45); mask-image: none;
+  }
+  .op2[data-modo-ficha="vigilia"] .op2-nome,
+  .op2[data-modo-ficha="vigilia"] .op2-atributo__nome {
+    font-family: var(--op2-fonte-display); font-weight: 400; letter-spacing: .01em; text-transform: none;
+  }
+  .op2[data-modo-ficha="vigilia"] .op2-atributo__nome { font-size: 1.15rem; }
+  .op2[data-modo-ficha="vigilia"] .op2-aba.active { text-shadow: none; }
+  .op2[data-modo-ficha="vigilia"] .op2-dado { font-family: var(--op2-fonte-rotulo); font-weight: 800; }
+}
+@media (max-width: 720px) {
+  .op2-seletor-item { grid-template-columns: minmax(0, 1fr); }
+  .op2-seletor-item__lista select { min-height: 12rem; }
+  .op2-seletor-item__previa { max-height: 18rem; }
+}
+
+
+
+/* Correcao de layout: formularios de itens (habilidades, equipamentos e ferramentas).
+   Mantem cada rotulo, campo e texto de ajuda em seu proprio fluxo. */
+@layer system {
+  .op2-item-ficha {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+    min-width: 0;
+    line-height: 1.4;
+  }
+
+  .op2-item-ficha .op2-item-ficha__topo {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .op2-item-ficha .op2-item-ficha__topo img {
+    display: block;
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    min-width: 3.5rem;
+    max-width: 3.5rem;
+    object-fit: cover;
+  }
+
+  .op2-item-ficha .op2-item-ficha__topo .op2-nome {
+    display: block;
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 0;
+  }
+
+  .op2-item-ficha .op2-grade-campos {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 0.8rem !important;
+    min-width: 0;
+  }
+
+  .op2-item-ficha .op2-campo {
+    display: flex !important;
+    position: relative !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 0.3rem !important;
+    min-width: 0;
+    width: 100%;
+    margin: 0 !important;
+    line-height: 1.35;
+  }
+
+  .op2-item-ficha .op2-campo > span {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    max-width: 100%;
+    margin: 0 !important;
+    transform: none !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  .op2-item-ficha .op2-campo input:not([type="checkbox"]),
+  .op2-item-ficha .op2-campo select,
+  .op2-item-ficha .op2-campo textarea {
+    display: block;
+    position: static !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  .op2-item-ficha .op2-campo--inline {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+
+  .op2-item-ficha .op2-campo--inline > span {
+    flex: 1 1 12rem;
+  }
+
+  .op2-item-ficha .op2-campo--inline input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: auto !important;
+    margin: 0 !important;
+  }
+
+  .op2-item-ficha .op2-ajuda {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    margin: 0.2rem 0 0 !important;
+    transform: none !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  .op2-item-ficha fieldset.op2-efeito {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0.8rem !important;
+  }
+
+  .op2-item-ficha fieldset.op2-efeito legend {
+    display: block;
+    position: static !important;
+    float: none !important;
+    width: auto;
+    max-width: 100%;
+    padding: 0 0.35rem;
+    line-height: 1.3;
+  }
+
+  .op2-item-ficha .op2-campo .editor,
+  .op2-item-ficha .op2-campo prose-mirror,
+  .op2-item-ficha .op2-campo .editor-content,
+  .op2-item-ficha .op2-campo textarea {
+    box-sizing: border-box;
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  @media (max-width: 520px) {
+    .op2-item-ficha .op2-grade-campos {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+
+/* FIX DEFINITIVO: fluxo dos campos nas fichas de item.
+   Regras fora de @layer para prevalecerem sobre os estilos gerais do Foundry. */
+.op2 .op2-item-ficha {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.op2 .op2-item-ficha *,
+.op2 .op2-item-ficha *::before,
+.op2 .op2-item-ficha *::after {
+  box-sizing: border-box;
+}
+.op2 .op2-item-ficha .op2-item-ficha__topo {
+  display: flex !important;
+  position: relative !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 0 4px !important;
+  padding: 0 0 10px !important;
+}
+.op2 .op2-item-ficha .op2-item-ficha__topo img {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  flex: 0 0 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  margin: 0 !important;
+}
+.op2 .op2-item-ficha .op2-item-ficha__topo input.op2-nome {
+  display: block !important;
+  position: static !important;
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+.op2 .op2-item-ficha .op2-grade-campos {
+  display: grid !important;
+  position: static !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+.op2 .op2-item-ficha label.op2-campo,
+.op2 .op2-item-ficha .op2-campo {
+  display: flex !important;
+  position: static !important;
+  float: none !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+}
+.op2 .op2-item-ficha .op2-campo > span {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+}
+.op2 .op2-item-ficha .op2-campo input:not([type="checkbox"]),
+.op2 .op2-item-ficha .op2-campo select,
+.op2 .op2-item-ficha .op2-campo textarea {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+.op2 .op2-item-ficha .op2-ajuda {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  line-height: 1.4 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+.op2 .op2-item-ficha fieldset.op2-efeito {
+  display: flex !important;
+  position: static !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 10px !important;
+}
+.op2 .op2-item-ficha fieldset.op2-efeito > legend {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 5px !important;
+  line-height: 1.3 !important;
+}
+.op2 .op2-item-ficha .op2-campo--inline {
+  display: flex !important;
+  position: static !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+.op2 .op2-item-ficha .op2-campo--inline > span {
+  flex: 1 1 auto !important;
+  width: auto !important;
+}
+.op2 .op2-item-ficha .op2-campo--inline input[type="checkbox"] {
+  display: inline-block !important;
+  position: static !important;
+  flex: 0 0 auto !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+}
+.op2 .op2-item-ficha prose-mirror,
+.op2 .op2-item-ficha .editor,
+.op2 .op2-item-ficha .editor-container,
+.op2 .op2-item-ficha .editor-content,
+.op2 .op2-item-ficha textarea {
+  display: block !important;
+  position: static !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+.op2 .op2-item-ficha prose-mirror {
+  min-height: 110px !important;
+}
+.op2 .op2-item-ficha prose-mirror .editor-content {
+  min-height: 90px !important;
+  padding: 8px !important;
+}
+@media (max-width: 560px) {
+  .op2 .op2-item-ficha .op2-grade-campos {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Navegador unificado de habilidades: estilos fora das layers para prevalecer sobre o core. */
+.op2-compendio-habilidades { width: min(940px, 94vw); max-width: 94vw; }
+.op2-compendio-habilidades .window-content { padding: .7rem; overflow: hidden; }
+.op2-browser-habilidades { display:grid; grid-template-columns:minmax(190px,235px) minmax(235px,1fr) minmax(270px,1.15fr); gap:.65rem; min-height:440px; max-height:min(70vh,610px); color:var(--op2-texto); }
+.op2-browser-habilidades__filtros,.op2-browser-habilidades__lista,.op2-browser-habilidades__preview { min-width:0; min-height:0; padding:.65rem; border:1px solid var(--op2-linha); border-radius:var(--op2-raio); background:var(--op2-superficie); }
+.op2-browser-habilidades__filtros { display:flex; flex-direction:column; gap:.7rem; }
+.op2-browser-habilidades__modos { display:flex; flex-wrap:wrap; gap:.25rem; }
+.op2-browser-habilidades__modos button { flex:1 1 auto; padding:.35rem; border:1px solid var(--op2-linha); background:transparent; color:var(--op2-texto); }
+.op2-browser-habilidades__modos button.ativo { border-color:var(--op2-vermelho); background:color-mix(in srgb,var(--op2-vermelho) 20%,transparent); }
+.op2-browser-habilidades__lista { display:flex; flex-direction:column; gap:.45rem; }
+.op2-browser-habilidades__lista>header { display:flex; justify-content:space-between; gap:.4rem; font-size:.82rem; }
+.op2-browser-habilidades__lista>header span { color:var(--op2-texto-fraco); }
+.op2-browser-habilidades__resultados { display:flex; flex-direction:column; gap:.2rem; overflow:auto; min-height:0; }
+.op2-browser-habilidades__entrada { display:flex; flex-direction:column; align-items:stretch; gap:.15rem; padding:.48rem .55rem; border:1px solid transparent; border-bottom-color:var(--op2-linha); border-radius:0; background:transparent; color:var(--op2-texto); text-align:left; cursor:pointer; }
+.op2-browser-habilidades__entrada:hover,.op2-browser-habilidades__entrada.selecionada { border-color:var(--op2-vermelho); background:var(--op2-superficie-alta); }
+.op2-browser-habilidades__entrada[hidden] { display:none!important; }
+.op2-browser-habilidades__entrada-nome { font-family:var(--op2-fonte-display); font-weight:700; }
+.op2-browser-habilidades__entrada-meta { color:var(--op2-texto-fraco); font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; }
+.op2-browser-habilidades__preview { display:flex; flex-direction:column; gap:.7rem; overflow:auto; }
+.op2-browser-habilidades__preview header { border-bottom:1px solid var(--op2-linha); padding-bottom:.5rem; }
+.op2-browser-habilidades__preview h3 { margin:.4rem 0 0; font-family:var(--op2-fonte-display); }
+.op2-browser-habilidades__preview header p { margin:.25rem 0 0; color:var(--op2-texto-fraco); font-size:.75rem; }
+.op2-browser-habilidades__descricao { min-height:6rem; overflow:auto; font-size:.88rem; line-height:1.45; }
+.op2-tags { display:flex; flex-wrap:wrap; gap:.2rem; margin-top:.18rem; }
+.op2-tag-chip { display:inline-block; padding:.12rem .35rem; border:1px solid var(--op2-linha-forte); border-radius:3px; color:var(--op2-vermelho-claro); font-size:.64rem; letter-spacing:.03em; text-transform:uppercase; }
+@media(max-width:760px) { .op2-browser-habilidades { grid-template-columns:minmax(0,1fr); max-height:75vh; } .op2-browser-habilidades__filtros { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
+
+/* Navegador de habilidades: neutraliza estilos de lista/tags herdados que
+   causavam sobreposição no compêndio. */
+.op2-compendio-habilidades .op2-browser-habilidades__resultados {
+  display:flex!important; flex-direction:column!important; align-items:stretch!important;
+  gap:0!important; overflow-y:auto!important; overflow-x:hidden!important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__entrada {
+  display:flex!important; flex-direction:column!important; position:relative!important;
+  align-items:flex-start!important; justify-content:flex-start!important; flex-wrap:nowrap!important;
+  width:100%!important; min-height:48px!important; height:auto!important; gap:4px!important;
+  box-sizing:border-box!important; padding:8px 10px!important; margin:0!important;
+  overflow:visible!important; line-height:1.35!important; text-align:left!important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__entrada > * {
+  display:block!important; position:static!important; float:none!important; transform:none!important;
+  inset:auto!important; width:auto!important; height:auto!important; max-width:100%!important;
+  margin:0!important; padding:0!important; box-sizing:border-box!important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__entrada-nome {
+  font-size:.9rem!important; line-height:1.25!important; white-space:normal!important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__entrada-meta {
+  color:var(--op2-texto-fraco)!important; font-size:.68rem!important; line-height:1.2!important;
+  opacity:.9!important;
+}
+.op2-compendio-habilidades .op2-tags { display:flex!important; flex-direction:row!important;
+  flex-wrap:wrap!important; align-items:center!important; gap:3px!important; margin-top:2px!important; }
+.op2-compendio-habilidades .op2-tag-chip { display:inline-flex!important; position:static!important;
+  width:auto!important; height:auto!important; padding:2px 5px!important; margin:0!important;
+  font-size:.62rem!important; line-height:1.2!important; white-space:nowrap!important; }
+.op2-compendio-habilidades select[name="filtroTag"] {
+  min-height:110px!important; height:auto!important; width:100%!important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__lista,
+.op2-compendio-habilidades .op2-browser-habilidades__filtros,
+.op2-compendio-habilidades .op2-browser-habilidades__preview { min-width:0!important; overflow:hidden!important; }
+.op2-compendio-habilidades .op2-browser-habilidades__lista { display:flex!important; flex-direction:column!important; }
+.op2-compendio-habilidades .op2-browser-habilidades__lista > header {
+  position:static!important; display:flex!important; flex-direction:row!important;
+  justify-content:space-between!important; align-items:center!important; gap:8px!important;
+  margin:0 0 6px!important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__resultados { flex:1 1 auto!important; min-height:0!important; }
+
+/* Ajustes de vocação e afinidade — regras fora de @layer para vencer o core. */
+.op2 .op2-ocupacao--seletor {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: .5rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 2rem !important;
+  padding: 0 .55rem !important;
+  border: 1px solid var(--op2-linha-forte) !important;
+  border-radius: var(--op2-raio) !important;
+  background: color-mix(in srgb, var(--op2-fundo) 72%, transparent) !important;
+  color: var(--op2-texto) !important;
+  font-family: var(--op2-fonte-mono) !important;
+  font-size: .82rem !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+.op2 .op2-ocupacao--seletor:hover:not([disabled]) {
+  border-color: var(--op2-vermelho-claro) !important;
+  background: var(--op2-superficie-alta) !important;
+}
+.op2 .op2-ocupacao--seletor i { color: var(--op2-vermelho-claro); }
+
+.op2 .op2-afinidade {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: .5rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: .25rem .45rem !important;
+  border: 1px solid var(--op2-linha) !important;
+  border-radius: var(--op2-raio) !important;
+  background: color-mix(in srgb, var(--op2-fundo) 60%, transparent) !important;
+}
+.op2 .op2-afinidade__identidade {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: .45rem !important;
+  min-width: 0 !important;
+  color: var(--op2-texto) !important;
+  font-family: var(--op2-fonte-display) !important;
+  font-size: .8rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+}
+.op2 .op2-afinidade__identidade i {
+  display: inline-grid !important;
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  place-items: center !important;
+  color: var(--op2-vermelho-claro) !important;
+}
+.op2 .op2-afinidade select {
+  width: auto !important;
+  max-width: 9rem !important;
+  min-width: 7.5rem !important;
+  height: 1.75rem !important;
+  font-size: .8rem !important;
+}
+
+/* Afinidades visuais. O fundo e o texto permanecem escuros/claros com contraste;
+   a cor do elemento é usada na moldura, nos marcadores e nos controles. */
+.op2-ficha--personagem[data-afinidade="nenhuma"] {
+  --op2-vermelho: #777b80;
+  --op2-vermelho-claro: #b9bec3;
+  --op2-vermelho-escuro: #45494e;
+}
+.op2-ficha--personagem[data-afinidade="sangue"] {
+  --op2-vermelho: #a30f20;
+  --op2-vermelho-claro: #e02b3c;
+  --op2-vermelho-escuro: #650713;
+}
+.op2-ficha--personagem[data-afinidade="energia"] {
+  --op2-vermelho: #7134b8;
+  --op2-vermelho-claro: #b17af0;
+  --op2-vermelho-escuro: #3c176c;
+}
+.op2-ficha--personagem[data-afinidade="conhecimento"] {
+  --op2-vermelho: #b38a08;
+  --op2-vermelho-claro: #efd04b;
+  --op2-vermelho-escuro: #6c5100;
+}
+.op2-ficha--personagem[data-afinidade="morte"] {
+  --op2-vermelho: #292929;
+  --op2-vermelho-claro: #858585;
+  --op2-vermelho-escuro: #090909;
+}
+.op2-ficha--personagem[data-afinidade="morte"] .op2-tag,
+.op2-ficha--personagem[data-afinidade="morte"] .op2-aba.active {
+  color: #f1f1f1 !important;
+}
+.op2-ficha--personagem[data-afinidade] .op2-cabecalho__retrato,
+.op2-ficha--personagem[data-afinidade] .op2-moldura {
+  border-color: color-mix(in srgb, var(--op2-vermelho-claro) 58%, transparent) !important;
+}
+.op2-ficha--personagem[data-afinidade] .op2-tag--secao {
+  background: var(--op2-vermelho) !important;
+}
+
+/* Seletor de vocação: lista pesquisável + prévia. */
+.op2-vocacao-seletor {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: .75rem !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  padding: .25rem !important;
+}
+.op2-vocacao-seletor .op2-campo {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: .3rem !important;
+  margin: 0 !important;
+}
+.op2-vocacao-seletor .op2-campo > span {
+  display: block !important;
+  margin: 0 !important;
+}
+.op2-vocacao-seletor select[name="vocacao"] {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 10rem !important;
+  padding: .35rem !important;
+}
+.op2-vocacao-seletor__previa {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: .3rem !important;
+  padding: .75rem !important;
+  border: 1px solid var(--op2-linha-forte) !important;
+  border-left: 3px solid var(--op2-vermelho) !important;
+  border-radius: var(--op2-raio) !important;
+  background: var(--op2-superficie) !important;
+}
+.op2-vocacao-seletor__previa h3,
+.op2-vocacao-seletor__previa p { margin: 0 !important; }
+.op2-vocacao-seletor [data-vocacao-pericia-wrap][hidden] { display: none !important; }
+.op2-vocacao-seletor .op2-campo--inline {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: .5rem !important;
+}
+.op2-vocacao-seletor .op2-campo--inline input[type="checkbox"] {
+  width: 1rem !important;
+  height: 1rem !important;
+  margin: 0 !important;
+}
+
+
+.op2-vocacao-seletor__personalizada {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: .65rem !important;
+  padding: .75rem !important;
+  border: 1px solid var(--op2-linha-forte) !important;
+  border-left: 3px solid var(--op2-vermelho) !important;
+  background: var(--op2-superficie) !important;
+}
+.op2-vocacao-seletor__personalizada[hidden] { display: none !important; }
+.op2-vocacao-seletor__personalizada h3 { margin: 0 !important; }
+.op2-vocacao-seletor__personalizada textarea {
+  display: block !important;
+  width: 100% !important;
+  min-height: 4rem !important;
+  resize: vertical !important;
+  padding: .45rem !important;
+}
+
+
+/* Correções do navegador de habilidades: filtros reais, tags visíveis e ação de adicionar no conteúdo. */
+.op2-compendio-habilidades .op2-browser-habilidades {
+  grid-template-rows: minmax(0,1fr) auto !important;
+  align-items: stretch !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__tags {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  max-height: 190px !important;
+  overflow-y: auto !important;
+  min-height: 70px !important;
+  padding: 7px !important;
+  border: 1px solid var(--op2-linha) !important;
+  border-radius: var(--op2-raio) !important;
+  background: color-mix(in srgb, var(--op2-fundo) 75%, transparent) !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__tag-filtro {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 7px !important;
+  min-height: 22px !important;
+  padding: 2px 4px !important;
+  color: var(--op2-texto) !important;
+  font-size: .78rem !important;
+  line-height: 1.2 !important;
+  cursor: pointer !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__tag-filtro input[type=checkbox] {
+  display: inline-block !important;
+  flex: 0 0 15px !important;
+  width: 15px !important;
+  height: 15px !important;
+  margin: 0 !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__entrada {
+  display: flex !important;
+  position: relative !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  width: 100% !important;
+  min-height: 50px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  text-align: left !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  line-height: 1.25 !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__entrada-nome,
+.op2-compendio-habilidades .op2-browser-habilidades__entrada-meta,
+.op2-compendio-habilidades .op2-browser-habilidades__entrada .op2-tags,
+.op2-compendio-habilidades .op2-browser-habilidades__entrada .op2-tag-chip {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  transform: none !important;
+  line-height: 1.25 !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__entrada .op2-tags {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  margin: 2px 0 0 !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__adicionar {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 9px 14px !important;
+  border: 1px solid var(--op2-vermelho) !important;
+  border-radius: var(--op2-raio) !important;
+  background: var(--op2-fundo) !important;
+  color: var(--op2-texto) !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__adicionar:hover:not([disabled]) {
+  background: color-mix(in srgb, var(--op2-vermelho) 20%, var(--op2-fundo)) !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__adicionar[disabled] {
+  opacity: .45 !important;
+  cursor: not-allowed !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__lista,
+.op2-compendio-habilidades .op2-browser-habilidades__filtros,
+.op2-compendio-habilidades .op2-browser-habilidades__preview {
+  min-height: 0 !important;
+}
+.op2-compendio-habilidades .op2-browser-habilidades__resultados {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 3px !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+
+.op2-compendio-habilidades .op2-browser-habilidades__entrada[hidden] { display: none !important; }
+
+
+/* Afinidade: propagar o acento também aos cards de habilidades, não só ao cabeçalho. */
+.op2-ficha--personagem[data-afinidade] .op2-item,
+.op2-ficha--personagem[data-afinidade] .op2-habilidade-detalhe {
+  border-color: color-mix(in srgb, var(--op2-vermelho-claro) 58%, var(--op2-linha)) !important;
+}
+.op2-ficha--personagem[data-afinidade] .op2-item__icone { border-color: var(--op2-vermelho-claro) !important; }
+.op2-ficha--personagem[data-afinidade] .op2-habilidade-resumo { color: var(--op2-texto) !important; }
+.op2-habilidade-detalhe { display:block; min-width:0; width:100%; }
+.op2-habilidade-resumo { display:flex; align-items:center; gap:.7rem; min-height:3.2rem; padding:.35rem .5rem; cursor:pointer; list-style:none; font-weight:700; }
+.op2-habilidade-resumo::-webkit-details-marker { display:none; }
+.op2-habilidade-resumo span { flex:1; }
+.op2-habilidade-detalhe:not([open]) .op2-item__texto { display:none !important; }
+.op2-habilidade-detalhe[open] .op2-habilidade-resumo i { transform:rotate(180deg); }
+.op2-habilidade-detalhe .op2-item__texto { padding:.25rem .65rem .75rem; }
+.op2-item--recolhivel { display:flex; align-items:flex-start; gap:.4rem; }
+.op2-item--recolhivel > .op2-botao-icone { margin:.6rem .35rem 0 0; }
+
+
+/* Correção das labels das abas adicionadas: compatibilidade com labelPrefix normalizado. */
+/* As chaves OP2.ABA.acoes e OP2.ABA.rituais estão definidas em lang/pt-BR.json. */
+
+/* A cor da afinidade precisa ser específica; o seletor genérico anterior tornava tudo vermelho. */
+.op2-ficha--personagem[data-afinidade="nenhuma"] {
+  --op2-cor-afinidade: #858585;
+}
+.op2-ficha--personagem[data-afinidade="sangue"] {
+  --op2-cor-afinidade: #c62828;
+}
+.op2-ficha--personagem[data-afinidade="energia"] {
+  --op2-cor-afinidade: #8e44ad;
+}
+.op2-ficha--personagem[data-afinidade="conhecimento"] {
+  --op2-cor-afinidade: #d6b52c;
+}
+.op2-ficha--personagem[data-afinidade="morte"] {
+  --op2-cor-afinidade: #777777;
+}
+.op2-ficha--personagem[data-afinidade] .op2-lista-itens .op2-item {
+  border: 1px solid color-mix(in srgb, var(--op2-cor-afinidade) 82%, #171313) !important;
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--op2-cor-afinidade) 75%, transparent);
+}
+.op2-ficha--personagem[data-afinidade] .op2-lista-itens .op2-item__icone {
+  border: 1px solid var(--op2-cor-afinidade) !important;
+}
+.op2-ficha--personagem[data-afinidade] .op2-lista-itens .op2-habilidade-detalhe {
+  border-color: transparent !important;
+}
+.op2-ficha--personagem[data-afinidade] .op2-lista-itens .op2-item:hover {
+  border-color: var(--op2-cor-afinidade) !important;
+}
+
+
+/* Controles de uso rápido da aba Ações. */
+.op2 .op2-acao__controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.op2 .op2-acao__controles .op2-botao {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.op2 .op2-acao__controles .op2-botao--destaque {
+  border-color: var(--op2-vermelho, #92251b);
+  background: color-mix(in srgb, var(--op2-vermelho, #92251b) 20%, transparent);
+}
+
+
+/* Cartão de Ação: o comando de uso fica visível mesmo com a descrição recolhida. */
+.op2 .op2-acao-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--op2-linha);
+  border-left: 3px solid var(--op2-vermelho);
+  border-radius: var(--op2-raio);
+  background: var(--op2-superficie);
+}
+.op2 .op2-acao-item > details {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.op2 .op2-acao-item .op2-habilidade-resumo {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.4rem;
+  cursor: pointer;
+}
+.op2 .op2-acao-item .op2-item__icone {
+  flex: 0 0 2rem;
+}
+.op2 .op2-acao-item .op2-item__texto {
+  padding: 0.6rem 0.2rem 0.2rem;
+}
+.op2 .op2-acao__usar {
+  flex: 0 0 auto;
+  min-width: 128px;
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  border-color: var(--op2-vermelho, #92251b);
+  background: color-mix(in srgb, var(--op2-vermelho, #92251b) 20%, transparent);
+}
+@media (max-width: 600px) {
+  .op2 .op2-acao-item {
+    flex-wrap: wrap;
+  }
+  .op2 .op2-acao__usar {
+    width: 100%;
+  }
+}

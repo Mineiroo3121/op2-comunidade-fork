@@ -1,0 +1,3 @@
+<section class="op2-painel tab {{tabs.rituais.cssClass}}" data-group="principal" data-tab="rituais">
+<div class="op2-painel__topo"><span class="op2-tag op2-tag--secao">Rituais</span></div>
+{{#if rituais.length}}<ul class="op2-lista-itens">{{#each rituais}}<li class="op2-item op2-item--recolhivel" data-item-id="{{id}}"><details class="op2-habilidade-detalhe"><summary class="op2-habilidade-resumo"><img class="op2-item__icone" src="{{img}}" alt=""><span>{{name}}</span><i class="fa-solid fa-chevron-down"></i></summary><div class="op2-item__texto">{{{system.descricao}}}<button type="button" class="op2-botao" data-action="editarItem">Editar</button></div></details></li>{{/each}}</ul>{{else}}<p class="op2-vazio">Nenhum ritual cadastrado.</p>{{/if}}</section>

@@ -1,0 +1,97 @@
+/** Construtores de campo reaproveitados pelos data models. */
+import { ESCADA, DADO_SOBRE_HUMANO, PERICIAS, ATRIBUTOS, aptidoesDoModo } from "../config.mjs";
+import { modoAtual } from "../modo.mjs";
+
+const f = () => foundry.data.fields;
+
+/** Um dado da escada. Nunca é `Number`: a escala do sistema é tamanho de dado (spec §1). */
+export function campoDado(inicial = "d4", opcoes = ESCADA) {
+  const { StringField } = f();
+  return new StringField({ required: true, initial: inicial, choices: opcoes, blank: false });
+}
+
+/** Contador inteiro não-negativo (testes de ferimento, reduções temporárias…). */
+export function campoContador(inicial = 0) {
+  const { NumberField } = f();
+  return new NumberField({ required: true, initial: inicial, min: 0, integer: true, nullable: false });
+}
+
+/**
+ * Quem agarra este ator e o que isso custa (beta §7.4; o Afogar, p. 33): `por` é o uuid de
+ * quem segura, `dano` a fórmula que ele perde no fim de cada rodada, `passos` o que perde no
+ * teste de se soltar. Vale enquanto a condição "agarrado" estiver ligada.
+ */
+export function campoAgarre() {
+  const { SchemaField, StringField, NumberField } = f();
+  return new SchemaField({
+    por: new StringField({ required: true, initial: "", blank: true }),
+    dano: new StringField({ required: true, initial: "", blank: true }),
+    passos: new NumberField({ required: true, initial: 0, integer: true, nullable: false }),
+  });
+}
+
+/** Recurso value/max, como PV e PD. */
+export function campoRecurso(inicial = 0) {
+  const { SchemaField, NumberField } = f();
+  return new SchemaField({
+    value: new NumberField({ required: true, initial: inicial, integer: true, nullable: false }),
+    max: new NumberField({ required: true, initial: inicial, min: 0, integer: true, nullable: false }),
+  });
+}
+
+/**
+ * Uma perícia: o dado treinado, o atributo-base sugerido e um acumulador de passos
+ * vindos de itens e efeitos. O atributo é gravado porque o mestre pode reparear
+ * a perícia de forma permanente na ficha (spec §2.3).
+ */
+export function campoPericia(atributoBase) {
+  const { SchemaField, StringField, NumberField } = f();
+  return new SchemaField({
+    die: campoDado(),
+    // Rótulo opcional por personagem: permite adaptar nomes de perícias sem
+    // alterar a tradução padrão nem afetar outros atores.
+    rotulo: new StringField({ required: true, initial: "", blank: true }),
+    atributo: new StringField({
+      required: true, initial: atributoBase, blank: false, choices: Object.keys(ATRIBUTOS),
+    }),
+    stepMod: new NumberField({ required: true, initial: 0, integer: true, nullable: false }),
+  });
+}
+
+/** As perícias dos dois modos como schema fixo: quem decide o que aparece é a tela. */
+export function campoPericias() {
+  const { SchemaField } = f();
+  const schema = {};
+  for (const [chave, def] of Object.entries(PERICIAS)) schema[chave] = campoPericia(def.atributo);
+  return new SchemaField(schema);
+}
+
+/** Os 3 atributos. */
+export function campoAtributos(inicial = "d6") {
+  const { SchemaField } = f();
+  const schema = {};
+  for (const chave of Object.keys(ATRIBUTOS)) schema[chave] = new SchemaField({ die: campoDado(inicial, [...ESCADA, DADO_SOBRE_HUMANO]) });
+  return new SchemaField(schema);
+}
+
+/**
+ * Aptidão é uma coleção *dinâmica* de subperícias, não seis campos fixos: o texto fala
+ * em "conhecimento em um campo específico" e a lista pode crescer (spec §2.3).
+ */
+export function campoAptidoes() {
+  const { TypedObjectField, SchemaField, StringField, ObjectField } = f();
+  const entrada = new SchemaField({
+    rotulo: new StringField({ required: true, initial: "", blank: true }),
+    die: campoDado(),
+  });
+  // `initial` como função: cada ator precisa do seu próprio objeto, não de um
+  // compartilhado entre todos.
+  const opcoes = { initial: () => aptidoesIniciais() };
+  // TypedObjectField existe a partir do v13; o fallback mantém o v12 utilizável em dev.
+  return TypedObjectField ? new TypedObjectField(entrada, opcoes) : new ObjectField(opcoes);
+}
+
+/** Valores iniciais das aptidões do modo do mundo, usados na criação do ator. */
+export function aptidoesIniciais() {
+  return Object.fromEntries(aptidoesDoModo(modoAtual()).map((c) => [c, { rotulo: "", die: "d4" }]));
+}

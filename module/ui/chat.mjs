@@ -1,0 +1,285 @@
+/**
+ * Botões dos cards de chat.
+ *
+ * Tudo que muda a ficha de alguém passa por aqui e exige clique — nenhum efeito do
+ * playtest é aplicado automaticamente.
+ */
+import { SYSTEM_ID, CUSTO_PD_EXAMINAR } from "../config.mjs";
+import { comoMestre, registrarAcaoDeMestre } from "./socket.mjs";
+import { rolarFalhaCritica, aplicarFalhaCritica, aplicarDano } from "../dice/falha-critica.mjs";
+import { testarCompartilhamento, registrarTravaDeCena, contarAoGrupo, entregarRevelacao } from "../cena/acoes-investigacao.mjs";
+import { rolarSobrecarga } from "../cena/rodada.mjs";
+import { marcarHackSocialResolvido, marcarHackTecnicoResolvido } from "../cena/acoes-desafio.mjs";
+import { iniciarHackTecnico, encerrarHackTecnico } from "../cena/timer-hack.mjs";
+import { rolarTesteDeQueda } from "../cena/ferimentos.mjs";
+import { defender } from "../cena/acoes-combate.mjs";
+import { concederPasso } from "../cena/acoes-recurso.mjs";
+import { preencherImpeto } from "../cena/impeto.mjs";
+import { entregarLeituraDoMestre } from "../cena/acoes-ferramenta.mjs";
+
+/** @type {Record<string, (ator: Actor, dataset: DOMStringMap) => Promise<void>>} */
+const ACOES = {
+  async "rolar-falha-critica"(ator) {
+    await rolarFalhaCritica(ator);
+  },
+  async "contar-ao-grupo"(ator, dataset) {
+    await contarAoGrupo(ator, dataset.poiUuid, dataset.infoId);
+  },
+  // Revelação pelo mestre (setting): o card de Examinar ficou com ele; entregar grava
+  // no personagem e manda o card do jogador.
+  async "entregar-revelacao"(ator, dataset) {
+    if (!game.user.isGM) return;
+    await entregarRevelacao(ator, dataset);
+  },
+  async "entregar-leitura"(ator, dataset) {
+    if (!game.user.isGM) return;
+    await entregarLeituraDoMestre(ator, dataset);
+  },
+  async "aplicar-falha-critica"(ator, dataset) {
+    await aplicarFalhaCritica(ator, Number(dataset.face));
+  },
+  // Dano de quem o card é: o dano de Alcançar é de quem caiu, o de Arrombar é de quem
+  // forçou. Antes isto ia para os tokens selecionados, então cair de um telhado
+  // machucava quem o mestre tivesse clicado na cena (achado em uso real).
+  async "aplicar-dano"(ator, dataset) {
+    await aplicarDano(ator, Number(dataset.quantidade), dataset.recurso ?? "pv");
+    ui.notifications.info(game.i18n.format("OP2.Chat.DanoAplicado", {
+      quantidade: dataset.quantidade, alvos: ator.name,
+    }));
+  },
+  // Dano improvisado a partir de um teste qualquer: aí sim vale a seleção da cena,
+  // porque o card não sabe em quem cai. É julgamento de mestre, e só ele vê o botão.
+  async "aplicar-dano-selecionado"(ator, dataset) {
+    const alvos = atoresSelecionados(ator);
+    for (const alvo of alvos) await aplicarDano(alvo, Number(dataset.quantidade), dataset.recurso ?? "pv");
+    ui.notifications.info(game.i18n.format("OP2.Chat.DanoAplicado", {
+      quantidade: dataset.quantidade,
+      alvos: alvos.map((a) => a.name).join(", "),
+    }));
+  },
+  // Examinar é uma aposta (spec §6.3.1): não revelou nada novo, paga 1 PD.
+  async "pagar-custo-examinar"(ator) {
+    await aplicarDano(ator, CUSTO_PD_EXAMINAR, "pd", { custo: true });
+    ui.notifications.info(game.i18n.format("OP2.Investigacao.PDPago", {
+      ator: ator.name, custo: CUSTO_PD_EXAMINAR,
+    }));
+  },
+  // Teste oposto de Luta (spec §8.1): o card do ataque espera a resposta do
+  // defensor — revidar, ou só se defender com Acrobacia +d6.
+  async "defender-ataque"(ator, dataset) {
+    if (!game.user.isGM && !ator.isOwner) {
+      ui.notifications.warn(game.i18n.localize("OP2.Aviso.SemPermissao"));
+      return;
+    }
+    await defender(ator, {
+      atacanteId: dataset.atacanteId,
+      totalAtaque: Number(dataset.total),
+      raAtaque: Number(dataset.ra),
+      rbAtaque: Number(dataset.rb),
+      armadoAtacante: dataset.armado === "true",
+      esquiva: dataset.esquiva === "true",
+    });
+  },
+  // O dano do combate já sabe em quem cai — não usa a seleção de tokens.
+  async "aplicar-dano-alvo"(ator, dataset) {
+    await aplicarDano(ator, Number(dataset.quantidade), dataset.recurso ?? "pv");
+    ui.notifications.info(game.i18n.format("OP2.Chat.DanoAplicado", {
+      quantidade: dataset.quantidade, alvos: ator.name,
+    }));
+  },
+  // Habilidade ou item na investigação (spec §6.6): o efeito é decisão do mestre,
+  // e o padrão sugerido pelo texto é um aumento de passo.
+  async "conceder-passo"(ator, dataset) {
+    if (!game.user.isGM) return;
+    await concederPasso(ator, { passos: Number(dataset.passos), origem: dataset.origem });
+  },
+  // Ímpeto: cada falha preenche um espaço (ficha do Ato I).
+  async "preencher-impeto"(ator) {
+    const estado = await preencherImpeto(ator);
+    if (!estado) {
+      ui.notifications.info(game.i18n.localize("OP2.Impeto.Cheia"));
+      return;
+    }
+    ui.notifications.info(game.i18n.format("OP2.Impeto.Preenchido", {
+      ator: ator.name, preenchidos: estado.preenchidos, espacos: estado.espacos,
+    }));
+  },
+  // Zerou PV ou PD: Vigor ou Disciplina contra a DT que escala (spec §8.2/§8.3).
+  // O sistema pede o teste; matar o personagem continua sendo decisão de mesa.
+  async "rolar-teste-queda"(ator, dataset) {
+    if (!game.user.isGM && !ator.isOwner) {
+      ui.notifications.warn(game.i18n.localize("OP2.Aviso.SemPermissao"));
+      return;
+    }
+    await rolarTesteDeQueda(ator, dataset.tipo);
+  },
+  // O teste do aliado no Compartilhar é ação livre (spec §6.5).
+  async "testar-compartilhar"(ator, dataset) {
+    await testarCompartilhamento(ator, dataset.compartilhadorId);
+  },
+  // As travas de 1×-por-cena são registradas pelo mestre, que julga a interpretação.
+  async "registrar-recapitular"(ator) {
+    await registrarTravaDeCena("recapitularUsado", ator);
+  },
+  async "registrar-compartilhar"(ator) {
+    await registrarTravaDeCena("compartilharUsado", ator);
+  },
+  // Sobrecarga mental: cada jogador rola o próprio dano; o mestre cobre ausentes.
+  async "rolar-sobrecarga"(ator, dataset) {
+    if (!game.user.isGM && !ator.isOwner) {
+      ui.notifications.warn(game.i18n.localize("OP2.Aviso.SemPermissao"));
+      return;
+    }
+    await rolarSobrecarga(ator, dataset.expressao);
+  },
+  // Comparar a resposta falada do jogador com o gabarito é julgamento de mesa —
+  // o botão só existe pro mestre (`data-op2-gm`, removido do DOM pro jogador).
+  async "marcar-hack-social-resolvido"(_ator, dataset) {
+    await marcarHackSocialResolvido(dataset.desafioUuid);
+  },
+
+  // O problema do hack técnico na mesa: o mestre revela e inicia o contador em toda
+  // tela, depois dá o veredito (spec §7.3).
+  async "iniciar-hack-tecnico"(_ator, dataset) {
+    await iniciarHackTecnico(dataset.desafioUuid, dataset.atorId || null, Number(dataset.faixa ?? -1));
+  },
+  async "hack-tecnico-acertou"(_ator, dataset) {
+    await encerrarHackTecnico(dataset.desafioUuid, dataset.atorId || null, true);
+  },
+  async "hack-tecnico-errou"(_ator, dataset) {
+    await encerrarHackTecnico(dataset.desafioUuid, dataset.atorId || null, false);
+  },
+  async "marcar-hack-tecnico-resolvido"(_ator, dataset) {
+    await marcarHackTecnicoResolvido(dataset.desafioUuid);
+  },
+
+};
+
+/**
+ * Alvo do dano: os tokens selecionados, ou o próprio ator do card se nada estiver
+ * selecionado. Evita o caso comum de aplicar dano no personagem errado.
+ */
+function atoresSelecionados(padrao) {
+  const selecionados = canvas.tokens?.controlled?.map((t) => t.actor).filter(Boolean) ?? [];
+  return selecionados.length ? selecionados : [padrao];
+}
+
+/** Quem tem botão de card fora daqui (o beta) registra assim. */
+export function registrarAcaoDeChat(nome, acao) {
+  ACOES[nome] = acao;
+}
+
+/**
+ * O áudio do Medidor EMF: por padrão toca só na tela de quem clica (`AudioHelper.play`
+ * sem difundir) — o jogador ouve o medidor "na própria mão", como o livro descreve.
+ * Com `todos`, difunde pelo socket para a mesa inteira; o servidor relaia `playAudio`
+ * de qualquer usuário, então o próprio jogador decide mostrar o que está ouvindo.
+ */
+export function tocarAudio(src, { todos = false } = {}) {
+  const AudioHelper = foundry.audio?.AudioHelper ?? globalThis.AudioHelper;
+  return AudioHelper.play({ src, volume: 0.8, loop: false }, todos);
+}
+
+/** O que dobra o efeito se clicado de novo. */
+const ACOES_UNICAS = new Set([
+  "vigilia-teste-queda", "vigilia-tabela-queda", "vigilia-aplicar-linha", "vigilia-dano", "vigilia-dano-dono",
+  "vigilia-rolar-dano", "vigilia-revidar", "vigilia-defender", "vigilia-descartar", "vigilia-recupera-pv",
+  "vigilia-perder-dado", "vigilia-agarrar", "vigilia-repetir",
+]);
+
+/** Identifica o botão na mensagem. Não pelo índice: o jogador não recebe os botões do mestre. */
+const chaveDoBotao = (botao) => `${botao.dataset.op2Acao}|${botao.textContent.trim()}`;
+
+/** @param {HTMLElement} elemento */
+function ligar(elemento) {
+  for (const botao of elemento.querySelectorAll("[data-op2-acao]")) {
+    botao.addEventListener("click", async (evento) => {
+      evento.preventDefault();
+      // currentTarget zera ao fim do dispatch: guardamos o botão antes do primeiro await.
+      const clicado = evento.currentTarget;
+      const { op2Acao, atorId, atorUuid } = clicado.dataset;
+      const acao = ACOES[op2Acao];
+      if (!acao) return;
+
+      // Token sem vínculo (a onda de afogados) não está em `game.actors`: vai por uuid.
+      const porUuid = atorUuid ? fromUuidSync(atorUuid) : null;
+      const ator = porUuid?.actor ?? porUuid ?? game.actors.get(atorId);
+      if (!ator) return void ui.notifications.warn(game.i18n.localize("OP2.Aviso.AtorAusente"));
+
+      // Ação que não dá para repetir sem dobrar o efeito: marca o botão, e o segundo clique
+      // pergunta. Só pergunta, porque a mesa pode mesmo querer aplicar de novo.
+      const unica = ACOES_UNICAS.has(op2Acao);
+      // Botões de um mesmo grupo são alternativas (absorver ou levar o dano): usado um, o outro
+      // também pergunta.
+      const { grupo } = clicado.dataset;
+      const irmaos = grupo ? [...(clicado.closest(".op2-card")?.querySelectorAll("[data-op2-acao]") ?? [])]
+        .filter((b) => b.dataset.grupo === grupo) : [clicado];
+      if (unica && irmaos.some((b) => b.classList.contains("op2-botao--usado"))) {
+        const denovo = await foundry.applications.api.DialogV2.confirm({
+          window: { title: clicado.textContent.trim() },
+          content: `<p>${game.i18n.localize("OP2.Chat.JaUsado")}</p>`,
+          rejectClose: false,
+        });
+        if (!denovo) return;
+      }
+
+      clicado.disabled = true;
+      try {
+        const resultado = await acao(ator, clicado.dataset);
+        // `false`: recusou ou cancelou, nada aconteceu.
+        if (unica && resultado !== false) {
+          clicado.classList.add("op2-botao--usado");
+          const li = clicado.closest("[data-message-id]");
+          if (li) comoMestre("marcar-botao-usado", { mensagemId: li.dataset.messageId, chave: chaveDoBotao(clicado) });
+        }
+      } finally {
+        clicado.disabled = false;
+      }
+    });
+  }
+}
+
+/**
+ * O core pinta toda mensagem de chat com `--chat-message-background`, uma textura de
+ * pergaminho fixa, e `--color-dark-4` no cabeçalho — pensados para um fundo claro,
+ * ilegível contra o card escuro do sistema. Marcar o `<li>` com `.op2` dá a ele acesso
+ * às mesmas variáveis `--op2-*` do card, e a CSS (`_chat.scss`) assume dali.
+ * @param {HTMLElement} html
+ */
+function teatralizarEnvelope(html) {
+  const li = html.classList?.contains("chat-message") ? html : html.closest?.(".chat-message");
+  if (li?.querySelector(".op2-card")) li.classList.add("op2");
+}
+
+export function registrarChat() {
+  registrarAcaoDeMestre("marcar-botao-usado", async ({ mensagemId, chave }) => {
+    const mensagem = game.messages.get(mensagemId);
+    if (!mensagem) return;
+    const usados = new Set(mensagem.getFlag(SYSTEM_ID, "botoesUsados") ?? []);
+    usados.add(chave);
+    await mensagem.setFlag(SYSTEM_ID, "botoesUsados", [...usados]);
+  });
+  // O link do áudio aparece em texto enriquecido de card, painel e ficha: um ouvinte
+  // delegado no documento cobre todos, sem cada tela ter que religar.
+  document.addEventListener("click", (evento) => {
+    const link = evento.target?.closest?.("[data-op2-audio]");
+    if (!link) return;
+    evento.preventDefault();
+    tocarAudio(link.dataset.op2Audio, { todos: "op2AudioTodos" in link.dataset });
+  });
+  // Só `renderChatMessageHTML`: o `renderChatMessage` está depreciado desde o v13 e
+  // registrá-lo faz o core avisar a cada mensagem. O sistema exige v13 no mínimo.
+  Hooks.on("renderChatMessageHTML", (msg, html) => {
+    // Botões de mestre são removidos do DOM, não escondidos por CSS.
+    if (msg.getFlag(SYSTEM_ID, "tipo") && !game.user.isGM) {
+      for (const botao of html.querySelectorAll("[data-op2-gm]")) botao.remove();
+    }
+    teatralizarEnvelope(html);
+    // Marcado por quem clicou, em qualquer cliente: fica na mensagem, para todos.
+    const usados = msg.getFlag(SYSTEM_ID, "botoesUsados") ?? [];
+    for (const botao of html.querySelectorAll("[data-op2-acao]")) {
+      if (usados.includes(chaveDoBotao(botao))) botao.classList.add("op2-botao--usado");
+    }
+    ligar(html);
+  });
+}

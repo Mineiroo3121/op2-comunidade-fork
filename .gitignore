@@ -1,0 +1,55 @@
+# Nunca commitar material da editora. O PDF do playtest é a fonte da spec e dos
+# compêndios; os arquivos públicos do Ato I e os extras do Ato II ficam fora do
+# repositório — o mestre entrega os zips na importação. Só o selo da licença viaja.
+*.pdf
+*.zip
+
+# O material da editora que o mantenedor usa para gerar e testar: PDFs e extras. As
+# artes do Ato I saíram do pacote (o mestre entrega o zip gratuito, como no Ato II);
+# assets/ato-i/ não existe mais.
+assets/ato-i/
+jambo-arquivos/
+
+# A aventura montada é texto do livro: não vai versionada nem no pacote. Quem monta é
+# o mestre, com o PDF dele, dentro do Foundry (module/aventura/). Os scripts de
+# scripts/ato-* montam a mesma coisa aqui, só para o pack:build e o e2e.
+packs/sources/ato-i-aventura/
+packs/sources/ato-ii-aventura/
+build/
+
+# O que a janela de aventuras precisa dos compêndios, empacotado pelo pack:build.
+assets/aventura/
+
+
+node_modules/
+.DS_Store
+*.DS_Store
+
+# CSS gerado pelo sass
+styles/*.css
+styles/*.css.map
+
+# Preview gerado por scripts/preview.mjs
+preview.html
+
+# Screenshot do e2e quando rodado sem pasta de saída (npm run e2e)
+e2e-foundry.png
+
+# Packs compilados (fonte fica em packs/sources/)
+packs/habilidades/
+packs/ferramentas/
+packs/ocupacoes/
+packs/ato-i-aventura/
+packs/ato-ii-aventura/
+
+.fvtt-config
+.vscode/settings.json
+
+# Cache do Python dos scripts de extração
+__pycache__/
+
+# Compêndios compilados: LevelDB que o Foundry carimba com a versão do core ao abrir
+# (`_stats.coreVersion`) — versionado, quebrava o v13 com "core version newer". O release
+# compila do zero (`npm run pack:build`); localmente, rode o mesmo depois de clonar.
+packs/*/
+!packs/sources/

@@ -1,0 +1,36 @@
+{
+  "_id": "b63b1785aad4ee3e",
+  "name": "Espada forjada em castelo",
+  "type": "equipamento",
+  "img": "systems/op2-comunidade-fork/assets/icons/tipos/equipamento.svg",
+  "system": {
+    "quantidade": 1,
+    "equipado": true,
+    "arma": true,
+    "descricao": "",
+    "ataque": {
+      "tipo": "corpo",
+      "bonusDano": 3,
+      "bonusTeste": 0,
+      "minimoCritico": 5,
+      "ignoraRd": 0,
+      "pequena": false
+    },
+    "marcial": false,
+    "armadura": 0,
+    "passos": "",
+    "cargas": {
+      "usa": false,
+      "value": 0,
+      "max": 0
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!b63b1785aad4ee3e"
+}

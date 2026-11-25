@@ -1,0 +1,58 @@
+<div class="op2-browser-habilidades">
+  <aside class="op2-browser-habilidades__filtros">
+    <label class="op2-campo">
+      <span>Pesquisar habilidades</span>
+      <input type="search" name="busca" placeholder="Nome, descrição ou tag…" autocomplete="off">
+    </label>
+    <div class="op2-browser-habilidades__modos" role="group" aria-label="Filtrar por modo">
+      <button type="button" class="ativo" data-filtro-modo="todas">Todas</button>
+      <button type="button" data-filtro-modo="moderno">Moderno</button>
+      <button type="button" data-filtro-modo="vigilia">Vigília</button>
+    </div>
+    <div class="op2-campo">
+      <span>Tags</span>
+      <div class="op2-browser-habilidades__tags" role="group" aria-label="Filtrar por tags">
+        {{#each tags}}
+          <label class="op2-browser-habilidades__tag-filtro"><input type="checkbox" data-filtro-tag value="{{this}}"><span>{{this}}</span></label>
+        {{else}}
+          <small>Nenhuma tag disponível.</small>
+        {{/each}}
+      </div>
+      <small>Marque uma ou várias tags para combinar os filtros.</small>
+    </div>
+    <button type="button" class="op2-botao op2-botao--fantasma" data-limpar-filtros>Limpar filtros</button>
+    <p class="op2-ajuda">As habilidades dos compêndios Moderno e Vigília aparecem juntas nesta lista. As tags são editáveis na ficha de cada habilidade.</p>
+  </aside>
+
+  <section class="op2-browser-habilidades__lista">
+    <header><strong>Habilidades disponíveis</strong><span data-resultado-contagem>{{habilidades.length}} habilidades</span></header>
+    <div class="op2-browser-habilidades__resultados">
+      {{#each habilidades}}
+        <button type="button" class="op2-browser-habilidades__entrada" data-habilidade-uuid="{{uuid}}"
+          data-nome="{{nome}}" data-meta="{{modoRotulo}} · {{pacote}}" data-modo="{{modo}}"
+          data-tags="{{tagsValor}}" data-tags-busca="{{tagsBusca}}" data-busca="{{busca}}">
+          <span class="op2-browser-habilidades__entrada-nome">{{nome}}</span>
+          <span class="op2-browser-habilidades__entrada-meta">{{modoRotulo}}</span>
+          {{#if tags.length}}<span class="op2-tags">{{#each tags}}<span class="op2-tag-chip">{{this}}</span>{{/each}}</span>{{/if}}
+        </button>
+      {{else}}
+        <p class="op2-vazio">Nenhuma habilidade encontrada nos compêndios.</p>
+      {{/each}}
+    </div>
+  </section>
+
+  <section class="op2-browser-habilidades__preview">
+    <header>
+      <span class="op2-tag op2-tag--secao">Prévia</span>
+      <h3 data-preview-nome>Selecione uma habilidade</h3>
+      <p data-preview-meta>Moderno e Vigília reunidos em um único navegador</p>
+    </header>
+    <div class="op2-browser-habilidades__descricao" data-preview-descricao>
+      Escolha uma entrada da lista para ler sua descrição antes de adicioná-la à ficha.
+    </div>
+  </section>
+  <input type="hidden" name="uuid" value="">
+  <button type="button" class="op2-browser-habilidades__adicionar" data-adicionar-habilidade disabled>
+    <i class="fa-solid fa-plus" aria-hidden="true"></i> Adicionar habilidade selecionada à ficha
+  </button>
+</div>

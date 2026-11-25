@@ -1,0 +1,62 @@
+<section class="op2-painel op2-painel--vinculos tab {{tabs.vinculos.cssClass}}" data-group="principal" data-tab="vinculos">
+  <div class="op2-painel__topo">
+    <span class="op2-tag op2-tag--secao">{{localize "OP2.Vinculo.Titulo"}}</span>
+    {{#if editavel}}
+      <button type="button" class="op2-botao op2-botao--fantasma" data-action="porRelacao">
+        <i class="fa-solid fa-plus"></i> {{localize "OP2.Vinculo.Adicionar"}}
+      </button>
+    {{/if}}
+  </div>
+
+  {{#if relacoes.length}}
+    <ul class="op2-vinculos__lista">
+      {{#each relacoes}}
+        <li class="op2-vinculo" data-grau="{{grau}}">
+          <img class="op2-vinculo__retrato" src="{{img}}" alt="{{nomePersonagem}}"
+            style="width:3rem;height:3rem;max-width:3rem;max-height:3rem;object-fit:cover;flex:0 0 3rem">
+          <div class="op2-vinculo__dados">
+            {{#if @root.editavel}}
+              <label class="op2-vinculo__campo">
+                <span>{{localize "OP2.Vinculo.Nome"}}</span>
+                <input type="text" name="system.relacoes.{{indice}}.com" value="{{nomePersonagem}}" maxlength="80">
+              </label>
+              <label class="op2-vinculo__campo">
+                <span>{{localize "OP2.Vinculo.Rotulo"}}</span>
+                <input type="text" name="system.relacoes.{{indice}}.rotulo" value="{{rotulo}}" maxlength="80">
+              </label>
+              <label class="op2-vinculo__campo op2-vinculo__campo--grau">
+                <span>{{localize "OP2.Vinculo.Grau"}}</span>
+                <select name="system.relacoes.{{indice}}.grau">
+                  <option value="0" {{#if (op2Eq grau 0)}}selected{{/if}}>0</option>
+                  <option value="1" {{#if (op2Eq grau 1)}}selected{{/if}}>1</option>
+                  <option value="2" {{#if (op2Eq grau 2)}}selected{{/if}}>2</option>
+                  <option value="3" {{#if (op2Eq grau 3)}}selected{{/if}}>3</option>
+                </select>
+              </label>
+            {{else}}
+              <strong>{{nomePersonagem}}</strong>
+              {{#if rotulo}}<span>{{rotulo}}</span>{{/if}}
+              <span class="op2-vinculo__pontos" aria-label="{{localize 'OP2.Relacao.Grau' n=grau}}">
+                {{#each pips}}<i class="fa-solid fa-circle{{#unless this}}-regular{{/unless}}" aria-hidden="true"></i>{{/each}}
+                <small>{{localize "OP2.Relacao.Grau" n=grau}}</small>
+              </span>
+            {{/if}}
+          </div>
+          {{#if podeInvocar}}
+            {{#if @root.editavel}}
+              <button type="button" class="op2-botao op2-botao--pequeno" data-action="invocarRelacao" data-indice="{{indice}}">
+                {{localize "OP2.Relacao.BotaoInvocar"}}
+              </button>
+            {{/if}}
+          {{/if}}
+          {{#if @root.editavel}}
+            <button type="button" class="op2-botao-icone" data-action="tirarRelacao" data-indice="{{indice}}"
+              aria-label="{{localize 'OP2.Vinculo.Remover'}}"><i class="fa-solid fa-trash"></i></button>
+          {{/if}}
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p class="op2-vazio">{{localize "OP2.Vinculo.Vazio"}}</p>
+  {{/if}}
+</section>

@@ -1,0 +1,36 @@
+{
+  "_id": "b2226e6b1c649093",
+  "name": "Lança",
+  "type": "equipamento",
+  "img": "systems/op2-comunidade-fork/assets/icons/tipos/equipamento.svg",
+  "system": {
+    "quantidade": 1,
+    "equipado": true,
+    "arma": true,
+    "descricao": "<p>Um passo a mais no primeiro ataque contra quem ainda não a atacou.</p>",
+    "ataque": {
+      "tipo": "corpo",
+      "bonusDano": 2,
+      "bonusTeste": 0,
+      "minimoCritico": 0,
+      "ignoraRd": 0,
+      "pequena": false
+    },
+    "marcial": false,
+    "armadura": 0,
+    "passos": "",
+    "cargas": {
+      "usa": false,
+      "value": 0,
+      "max": 0
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!b2226e6b1c649093"
+}

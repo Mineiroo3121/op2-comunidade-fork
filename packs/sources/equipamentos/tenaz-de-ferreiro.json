@@ -1,0 +1,36 @@
+{
+  "_id": "66b50e10db1112dd",
+  "name": "Tenaz de ferreiro",
+  "type": "equipamento",
+  "img": "systems/op2-comunidade-fork/assets/icons/tipos/equipamento.svg",
+  "system": {
+    "quantidade": 1,
+    "equipado": true,
+    "arma": false,
+    "descricao": "",
+    "ataque": {
+      "tipo": "",
+      "bonusDano": 0,
+      "bonusTeste": 0,
+      "minimoCritico": 0,
+      "ignoraRd": 0,
+      "pequena": false
+    },
+    "marcial": false,
+    "armadura": 0,
+    "passos": "",
+    "cargas": {
+      "usa": false,
+      "value": 0,
+      "max": 0
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!66b50e10db1112dd"
+}

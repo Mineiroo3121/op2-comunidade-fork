@@ -1,0 +1,19 @@
+{
+  "_id": "17547f344a45282f",
+  "_key": "!items!17547f344a45282f",
+  "name": "Cientista",
+  "type": "ocupacao",
+  "img": "systems/op2-comunidade-fork/assets/icons/tipos/ocupacao.svg",
+  "system": {
+    "descricao": "<p>Pesquisa, laboratório, método. Quem trabalha com o que pode ser medido — e por isso estranha o que não pode.</p>",
+    "habilidade": "Foco Mental",
+    "habilidadeUuid": "Compendium.op2-comunidade-fork.habilidades.Item.6a8df4108132510a"
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

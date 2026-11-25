@@ -1,0 +1,32 @@
+<section class="op2-painel tab {{tabs.acoes.cssClass}}" data-group="principal" data-tab="acoes">
+  <div class="op2-painel__topo"><span class="op2-tag op2-tag--secao">Ações</span></div>
+  {{#if acoes.length}}
+    <ul class="op2-lista-itens">
+      {{#each acoes}}
+        <li class="op2-acao-item" data-item-id="{{id}}">
+          <details class="op2-habilidade-detalhe">
+            <summary class="op2-habilidade-resumo">
+              <img class="op2-item__icone" src="{{img}}" alt="">
+              <span>{{name}}</span>
+              <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="op2-item__texto">
+              {{{descricao}}}
+              {{#if @root.editavel}}
+                <button type="button" class="op2-botao" data-action="editarItem" data-item-id="{{id}}">Editar</button>
+              {{/if}}
+            </div>
+          </details>
+          {{#if @root.editavel}}
+            <button type="button" class="op2-botao op2-botao--destaque op2-acao__usar"
+              data-action="usarAcao" data-item-id="{{id}}">
+              <i class="fa-solid fa-bolt" aria-hidden="true"></i> {{custoRotulo}}
+            </button>
+          {{/if}}
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p class="op2-vazio">Nenhuma habilidade com uso foi marcada como Ação.</p>
+  {{/if}}
+</section>

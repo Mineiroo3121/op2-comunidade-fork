@@ -1,0 +1,169 @@
+/**
+ * Fim de investigação.
+ *
+ * A investigação é a unidade estrutural do jogo, não uma unidade de tempo (spec §5.1).
+ * Encerrar é um evento explícito do mestre, e é o único momento em que as reduções
+ * temporárias de atributo somem e as ações travadas do grupo voltam a ficar
+ * disponíveis. O roster (`participantes`), os POIs e os desafios vinculados são
+ * estrutura da investigação e não são zerados — só rodada, sobrecarga e as travas,
+ * que são estado de sessão.
+ */
+import { investigacaoAtiva } from "./investigacao-ativa.mjs";
+import { usaCombateNovo, modoAtual } from "../modo.mjs";
+import { esvaziarImpeto } from "./impeto.mjs";
+import { botoesDeRecuperacao } from "../vigilia/queda.mjs";
+import { cardVigilia } from "../vigilia/card.mjs";
+
+/**
+ * O que o beta manda acabar com a cena (beta §8, §9, §12): marcadores, condições, dados
+ * guardados e os contadores de teste. Lesão, trauma, pavor e armadura gasta ficam.
+ */
+export const ZERADO_DO_BETA = {
+  "system.estado.marcadores": 0,
+  "system.estado.condicoes": [],
+  "system.estado.agarre": { por: "", dano: "", passos: 0 },
+  "system.estado.bonus": [],
+  "system.estado.testesFerimento": 0,
+  "system.estado.testesTrauma": 0,
+  "system.estado.perseguicao": { avanco: 0, folego: 0, esforcos: 0, periciasUsadas: [], derrubado: false, obstaculo: false, avisado: false },
+  "system.estado.furtividade": { esconderijo: [], testou: false, avancos: 0, usosEsconder: 0, trilha: false, esperando: false },
+  "system.estado.equilibrio": 0,
+};
+
+/** Reduções de atributo (contusão) e o aumento do Ímpeto valem "até o fim da cena". */
+export const ZERADO_DA_CENA = {
+  "system.estado.reducoesTemporarias.fisico": 0,
+  "system.estado.reducoesTemporarias.mente": 0,
+  "system.estado.reducoesTemporarias.emocao": 0,
+  "system.estado.aumentosTemporarios.fisico": 0,
+  "system.estado.aumentosTemporarios.mente": 0,
+  "system.estado.aumentosTemporarios.emocao": 0,
+};
+
+/**
+ * @param {object} [opcoes]
+ * @param {Actor[]} [opcoes.atores] default: todos os participantes da investigação ativa
+ * @param {boolean} [opcoes.avisar]
+ */
+export async function encerrarCena({ atores, avisar = true, investigacao = investigacaoAtiva() } = {}) {
+  const alvos = atores ?? personagensDaCenaAtiva(investigacao);
+  if (!alvos.length) {
+    if (avisar) ui.notifications.warn(game.i18n.localize("OP2.Cena.SemPersonagens"));
+    return [];
+  }
+
+  const zerado = {
+    ...ZERADO_DA_CENA,
+    "system.estado.acoesUsadasNaCena": [],
+    // A revelação é por investigação: encerrada, o que foi descoberto nela é
+    // conhecimento da mesa, não estado do sistema.
+    "system.estado.poisInvestigados": [],
+    "system.estado.infosReveladas": [],
+    "system.estado.ferramentasReveladas": [],
+    // O combate simplificado do alpha só zera os contadores com cura ou descanso (spec §8.2).
+    ...(usaCombateNovo() ? ZERADO_DO_BETA : {}),
+  };
+
+  const atualizacoes = alvos.map((ator) => ({ _id: ator.id, ...zerado }));
+  await Actor.updateDocuments(atualizacoes);
+
+  // O contador de rodadas alimenta a sobrecarga mental (spec §7.6) e reinicia junto.
+  // Travas de 1×-por-investigação e a ordem das rodadas também são da sessão que
+  // terminou — o roster e os vínculos de POI/desafio continuam.
+  if (investigacao) {
+    await investigacao.update({
+      "system.rodada": 0,
+      "system.recapitularUsado": { usado: false, atorId: "", nome: "" },
+      "system.compartilharUsado": { usado: false, atorId: "", nome: "" },
+      "system.ordemParticipantes": [],
+    });
+    // O gate do hack (spec §7.3) é "rodada da última tentativa": com a rodada de volta
+    // a 0, uma tentativa na rodada 3 da sessão passada trancava o dispositivo até a
+    // rodada 4 da próxima. O progresso do desafio (pontuação, senha, resolvido) fica.
+    for (const uuid of investigacao.system.desafios ?? []) {
+      const desafio = await fromUuid(uuid);
+      if (desafio?.type !== "desafio-acesso") continue;
+      const dados = {};
+      for (const hack of ["hackTecnico", "hackSocial"]) {
+        if (desafio.system[hack].ultimaTentativaRodada >= 0) dados[`system.${hack}.ultimaTentativaRodada`] = -1;
+      }
+      if (Object.keys(dados).length) await desafio.update(dados);
+    }
+  }
+
+  // Encerrar pela investigação termina a cena como o painel de ação (beta §8.2, §12).
+  if (modoAtual() === "vigilia") for (const ator of alvos) await esvaziarImpeto(ator);
+  if (usaCombateNovo()) {
+    const botoes = botoesDeRecuperacao(alvos);
+    if (botoes.length) await cardVigilia(null, { titulo: game.i18n.localize("OP2.CenaAcao.Encerrada"), botoes });
+  }
+
+  if (avisar) {
+    ui.notifications.info(game.i18n.format("OP2.Cena.Encerrada", { total: alvos.length }));
+  }
+  return alvos;
+}
+
+/** Personagens no roster da investigação ativa. */
+export function personagensDaCenaAtiva(investigacao = investigacaoAtiva()) {
+  return participantesDaInvestigacao("personagem", investigacao);
+}
+
+/** NPCs no roster da investigação ativa — agem por último (spec §5.2). */
+export function npcsDaCenaAtiva(investigacao = investigacaoAtiva()) {
+  return participantesDaInvestigacao("npc", investigacao);
+}
+
+/**
+ * Quem pode ser alvo de uma ação que envolve outro personagem (Ajudar, Compartilhar,
+ * Atacar).
+ *
+ * Não é "todo ator do mundo", nem sequer todo participante: quem o mestre escondeu
+ * (`participantesOcultos`) não está em cena, e oferecê-lo como alvo entrega que ele
+ * existe (achado em uso real: "lista tudo, não faz sentido algum"). Quem chama diz se
+ * NPC entra — Ajudar é entre personagens, Atacar não.
+ *
+ * @param {object} [opcoes]
+ * @param {Actor}  [opcoes.exceto]   quem está agindo, fora da própria lista
+ * @param {boolean} [opcoes.comNpcs] inclui os NPCs do roster
+ */
+export function alvosDaCenaAtiva({ exceto, comNpcs = false } = {}) {
+  const investigacao = investigacaoAtiva();
+  const ocultos = investigacao?.system.participantesOcultos ?? [];
+  const roster = comNpcs
+    ? [...personagensDaCenaAtiva(), ...npcsDaCenaAtiva()]
+    : personagensDaCenaAtiva();
+
+  return roster
+    .filter((ator) => !ocultos.includes(ator.uuid))
+    .filter((ator) => ator.id !== exceto?.id);
+}
+
+/**
+ * O alvo marcado no mapa (a mira do Foundry), que é como a mesa já diz "é nele".
+ *
+ * Quando existe um alvo marcado, ele manda: não faz sentido abrir uma lista para
+ * escolher de novo quem você já apontou, nem exigir que ele esteja no roster da
+ * investigação (achado em uso real). Só entram tipos que o sistema conhece.
+ *
+ * @param {object} [opcoes]
+ * @param {Actor}  [opcoes.exceto]   quem está agindo nunca é o próprio alvo
+ * @param {string[]} [opcoes.tipos]  tipos aceitos; default personagem e NPC
+ * @returns {Actor[]}
+ */
+export function alvosMarcados({ exceto, tipos = ["personagem", "npc"] } = {}) {
+  const marcados = [...(game.user?.targets ?? [])]
+    .map((token) => token.actor)
+    .filter((ator) => ator && tipos.includes(ator.type) && ator.id !== exceto?.id);
+  return [...new Set(marcados)];
+}
+
+function participantesDaInvestigacao(tipo, investigacao = investigacaoAtiva()) {
+  const uuids = investigacao?.system.participantes ?? [];
+  const atores = [];
+  for (const uuid of uuids) {
+    const ator = fromUuidSync(uuid);
+    if (ator?.type === tipo) atores.push(ator);
+  }
+  return atores;
+}
